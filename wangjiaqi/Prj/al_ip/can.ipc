@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<CANConfig>
+    <Config>
+        <FILTER_CNT>2</FILTER_CNT>
+        <RX_DEPTH>2</RX_DEPTH>
+        <TX_DEPTH>2</TX_DEPTH>
+    </Config>
+    <GeneralConfig>
+        <Device>EF2M45LG48B</Device>
+        <Type>EF2_LOGIC_CAN</Type>
+        <Version>1.0</Version>
+        <create_VHDL>false</create_VHDL>
+        <inst>can</inst>
+    </GeneralConfig>
+    <GeneratedFiles>
+        <GateVerilog Enable="true">can_gate.v</GateVerilog>
+    </GeneratedFiles>
+</CANConfig>

@@ -1,0 +1,17 @@
+set_pin_assignment	{ ale }	{ LOCATION = P55; }
+set_pin_assignment	{ clk_adc }	{ LOCATION = P57; }
+set_pin_assignment	{ data[0] }	{ LOCATION = P13; }
+set_pin_assignment	{ data[1] }	{ LOCATION = P12; }
+set_pin_assignment	{ data[2] }	{ LOCATION = P11; }
+set_pin_assignment	{ data[3] }	{ LOCATION = P10; }
+set_pin_assignment	{ data[4] }	{ LOCATION = P5; }
+set_pin_assignment	{ data[5] }	{ LOCATION = P4; }
+set_pin_assignment	{ data[6] }	{ LOCATION = P3; }
+set_pin_assignment	{ data[7] }	{ LOCATION = P2; }
+set_pin_assignment	{ eoc }	{ LOCATION = P60; }
+set_pin_assignment	{ oe }	{ LOCATION = P86; }
+set_pin_assignment	{ start }	{ LOCATION = P59; }
+set_pin_assignment	{ sys_clk }	{ LOCATION = P34; }
+
+
+

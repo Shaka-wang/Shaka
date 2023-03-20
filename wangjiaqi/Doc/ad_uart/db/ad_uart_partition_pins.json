@@ -1,0 +1,37 @@
+{
+	"partitions" : [
+		{
+			"name" : "Top",
+			"pins" : [
+				{
+					"name" : "TXD",
+					"strict" : false
+				},
+				{
+					"name" : "ad_clk",
+					"strict" : false
+				},
+				{
+					"name" : "ad_cs_n",
+					"strict" : false
+				},
+				{
+					"name" : "clk",
+					"strict" : false
+				},
+				{
+					"name" : "rst_n",
+					"strict" : false
+				},
+				{
+					"name" : "ad_data",
+					"strict" : false
+				},
+				{
+					"name" : "RXD",
+					"strict" : false
+				}
+			]
+		}
+	]
+}

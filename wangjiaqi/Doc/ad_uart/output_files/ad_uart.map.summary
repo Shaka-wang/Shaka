@@ -1,0 +1,14 @@
+Analysis & Synthesis Status : Successful - Wed Feb 22 15:38:46 2023
+Quartus Prime Version : 18.0.0 Build 614 04/24/2018 SJ Standard Edition
+Revision Name : ad_uart
+Top-level Entity Name : ad_uart
+Family : Cyclone IV E
+Total logic elements : 505
+    Total combinational functions : 418
+    Dedicated logic registers : 257
+Total registers : 257
+Total pins : 7
+Total virtual pins : 0
+Total memory bits : 131,144
+Embedded Multiplier 9-bit elements : 0
+Total PLLs : 0

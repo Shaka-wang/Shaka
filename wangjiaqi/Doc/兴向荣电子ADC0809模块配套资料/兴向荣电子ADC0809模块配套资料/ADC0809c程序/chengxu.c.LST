@@ -1,0 +1,293 @@
+C51 COMPILER V7.06   CHENGXU_C                                                             06/22/2013 14:09:35 PAGE 1   
+
+
+C51 COMPILER V7.06, COMPILATION OF MODULE CHENGXU_C
+OBJECT MODULE PLACED IN chengxu.c.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE chengxu.c.c BROWSE DEBUG OBJECTEXTEND
+
+stmt level    source
+
+   1          //功能:ADC0809模块测试，读取IN3口的模拟电
+   2          //编译环境: KEIL UVISION2
+   3          //单片机晶振：12M  单片机型号AT89S52
+   4          //单片机晶振: 无特殊要求
+   5          //作者：兴向荣电子元件店
+   6          //日期：2013.06.20
+   7          //功能：
+   8          
+   9          #include <reg52.h>
+  10          #include <intrins.h>
+  11          
+  12          #define uchar unsigned char
+  13          #define uint  unsigned int
+  14          
+  15          
+  16          // adc0809模块接线
+  17          #define uchar unsigned char 
+  18          sbit STR=P1^0; //单片机P1.0接模块STR引脚, 启动转换信号
+  19          sbit EOC=P1^1; //单片机P1.1接模块EOC， 转换结束信号，高电平有效
+  20          sbit OE=P1^2; //单片机P1.2接模块OE,输出允许信号，高电平有效
+  21          sbit CLK=P1^3; //单片机P1.3接CLK ，ADC0809时钟,输入50-800KHZ的频率
+  22                         //一般选用500K
+  23          #define adc0809_data  P3// ADC0809模块的D0-D7分别接P3.0-P3.7
+  24          /*地址选择 A 接H  
+  25                     B 接H
+  26                     C 接L
+  27          选择通到IN3，当然也可以通过软件设置地址
+  28               REF+ 接VCC
+  29               REF- 接GND
+  30          这样 AD=256*(VIN-(VREF-))/(VREF+)-(VREF-)
+  31               (VREF+)=5V；
+  32               （VREF-)=0V;
+  33               AD=256*VIN/5
+  34          所以IN3口的电压VIN=AD*5/256;
+  35          */
+  36          uchar AD_DATA[1]; //保存IN0通道转换后的数据
+  37          uint  addata2;
+  38          //==============LCD1602接口连接方法=====================
+  39          /*-----------------------------------------------------
+  40                 |DB0-----P0.0 | DB4-----P0.4 | RW-------P2.3    |
+  41                 |DB1-----P0.1 | DB5-----P0.5 | RS-------P2.4    |
+  42                 |DB2-----P0.2 | DB6-----P0.6 | E--------P2.2    |
+  43                 |DB3-----P0.3 | DB7-----P0.7 | 
+  44              ---------------------------------------------------*/
+  45          //================================================*/              
+  46          #define LCM_Data     P0    //LCD1602数据接口
+  47          #define Busy         0x80   //用于检测LCM状态字中的Busy标识
+  48          sbit    LCM_RW     = P2^3;  //读写控制输入端，LCD1602的第五脚
+  49          sbit    LCM_RS     = P2^4;  //寄存器选择输入端，LCD1602的第四脚
+  50          sbit    LCM_E      = P2^2;  //使能信号输入端,LCD1602的第6脚
+  51          
+  52          
+  53          
+  54          
+  55          
+C51 COMPILER V7.06   CHENGXU_C                                                             06/22/2013 14:09:35 PAGE 2   
+
+  56          //**************函数声明***************************************
+  57          void    WriteDataLCM            (uchar WDLCM);//LCD模块写数据
+  58          void    WriteCommandLCM (uchar WCLCM,BuysC); //LCD模块写指令
+  59          uchar   ReadStatusLCM(void);//读LCD模块的忙标
+  60          void    DisplayOneChar(uchar X,uchar Y,uchar ASCII);//在第X+1行的第Y+1位置显示一个字符
+  61          void    LCMInit(void);//LCD初始
+  62          void    delayms(uint ms);//1MS基准延时程序
+  63          void    delay(uchar i); //延时函数2
+  64          void    DisplayListChar(uchar X,uchar Y,uchar delayms, uchar code *DData);
+  65          void   judge_xianshi(void);//显示处理程序
+  66          
+  67          void init();//系统初始化设置
+  68          void AD();//读取AD数据
+  69          
+  70          uchar flag1;
+  71          //***********************主程序******************************
+  72          main()   
+  73          {   
+  74   1         init();//系统初始化设置
+  75   1         LCMInit();
+  76   1         while(1)
+  77   1         {
+  78   2             AD();
+  79   2             judge_xianshi();
+  80   2             delayms(100);
+  81   2             
+  82   2         }
+  83   1      
+  84   1      }
+  85          /*********
+  86          系统初始化
+  87          ***********/ 
+  88          void init() 
+  89          {  
+  90   1        EA=1; //开总中断
+  91   1        TMOD=0x02; //设定定时器 T0工作方式
+  92   1        TH0=216; //利用T0中断产生CLK信号
+  93   1        TL0=216;  
+  94   1        TR0=1; //启动定时器T0 
+  95   1        ET0=1; 
+  96   1        STR=0; 
+  97   1        OE=0; 
+  98   1       
+  99   1      }  
+ 100          void   judge_xianshi()
+ 101          {
+ 102   1        addata2=AD_DATA[0]*100;//把数据扩大100，为下面求取小数位后2位做准备
+ 103   1        DisplayListChar(0,1,0, "xingxiangrong");//在液晶的第一行显示字符"XINGXIANGR"
+ 104   1        DisplayListChar(1,0,0, "AD="); //在液晶的第二行第0位开始显示"AD="
+ 105   1        DisplayOneChar( 1, 3, AD_DATA[0]/100+0x30); //显示AD数据的百位
+ 106   1        DisplayOneChar( 1, 4, AD_DATA[0]/10%10+0x30);//显示AD数据的十位
+ 107   1        DisplayOneChar( 1, 5, AD_DATA[0]%10+0x30);//显示AD数据的各位
+ 108   1        DisplayListChar(1,7,0, "Vin="); //在液晶的第二行第8位开始显示"Vin="
+ 109   1      //根据VIN=AD*5/256，求取IN3通到输入的电压
+ 110   1        DisplayOneChar( 1, 11, AD_DATA[0]/51+0x30);//显示输入电压的整数位
+ 111   1        DisplayListChar(1,12,0, ".");//显示小数点
+ 112   1        DisplayOneChar( 1, 13, addata2/51/10%10+0x30);//显示输入电压小数后1位
+ 113   1        DisplayOneChar( 1, 14, addata2/51%10+0x30);//显示输入电压小树后2位
+ 114   1        DisplayListChar(1,15,0, "V");
+ 115   1      }
+ 116          /***********AD
+ 117          转换函数
+C51 COMPILER V7.06   CHENGXU_C                                                             06/22/2013 14:09:35 PAGE 3   
+
+ 118          **********/ 
+ 119          void AD() 
+ 120          { 
+ 121   1         STR=0; 
+ 122   1         //ADDR这样如果不是通道0，可以在这边加一条其他地址的程序 
+ 123   1         delay(10);  
+ 124   1         STR=1; //启动AD转换
+ 125   1         delay(10); 
+ 126   1         STR=0;  
+ 127   1         while(0==EOC);//等待转换结束 
+ 128   1         OE=1;  
+ 129   1         AD_DATA[0]=adc0809_data; //读取AD数据，数据范围为0-255
+ 130   1         OE=0;  
+ 131   1      } 
+ 132          /***********T0
+ 133          中断服务程序
+ 134          ************/ 
+ 135          void t0(void) interrupt 1 using 0 
+ 136          {  
+ 137   1         CLK=~CLK; 
+ 138   1      }  
+ 139          /*====================================================================  
+ 140            按指定位置显示一串字符:第 X 行,第 y列
+ 141            注意:字符串不能长于16个字符
+ 142          ======================================================================*/
+ 143          void DisplayListChar(uchar X,uchar Y,uchar ms, uchar code *DData)
+ 144          {
+ 145   1       unsigned char ListLength;
+ 146   1      
+ 147   1       ListLength = 0;
+ 148   1      
+ 149   1       X &= 0x1;
+ 150   1       Y &= 0xF; //限制X不能大于15，Y不能大于1
+ 151   1       while (DData[ListLength]!='\0') //若到达字串尾则退出
+ 152   1        { 
+ 153   2           if (Y <= 0xF) //X坐标应小于0xF
+ 154   2           {
+ 155   3              DisplayOneChar(X, Y, DData[ListLength]); //显示单个字符
+ 156   3              ListLength++;
+ 157   3              Y++;
+ 158   3                  delayms(ms);//延时显示字符串
+ 159   3           }
+ 160   2           else
+ 161   2                  break;//跳出循环体
+ 162   2        }
+ 163   1      }
+ 164          /*======================================================================
+ 165           LCM初始化
+ 166          ======================================================================*/
+ 167          void LCMInit(void) 
+ 168          {
+ 169   1       LCM_Data = 0;
+ 170   1       WriteCommandLCM(0x38,0); //三次显示模式设置，不检测忙信号
+ 171   1       delayms(5);
+ 172   1       WriteCommandLCM(0x38,0);
+ 173   1       delayms(5);
+ 174   1       WriteCommandLCM(0x38,0);
+ 175   1       delayms(5);
+ 176   1       WriteCommandLCM(0x38,1); //显示模式设置,开始要求每次检测忙信号
+ 177   1       WriteCommandLCM(0x08,1); //关闭显示
+ 178   1       WriteCommandLCM(0x01,1); //显示清屏
+ 179   1       WriteCommandLCM(0x06,1); // 显示光标移动设置
+C51 COMPILER V7.06   CHENGXU_C                                                             06/22/2013 14:09:35 PAGE 4   
+
+ 180   1       WriteCommandLCM(0x0C,1); // 显示开及光标设置
+ 181   1       delayms(100);
+ 182   1      }
+ 183          //==============================LCD1602显示子程序================================================
+ 184          // 写数据函数: E =高脉冲 RS=1 RW=0
+ 185          //======================================================================*/
+ 186          void WriteDataLCM(uchar WDLCM)
+ 187          {
+ 188   1       ReadStatusLCM(); //检测忙
+ 189   1       LCM_Data = WDLCM;
+ 190   1       LCM_RS = 1;
+ 191   1       LCM_RW = 0;
+ 192   1       LCM_E = 0; //若晶振速度太高可以在这后加小的延时
+ 193   1       LCM_E = 0; //延时
+ 194   1       LCM_E = 1;
+ 195   1      }
+ 196          /*====================================================================
+ 197            写指令函数: E=高脉冲 RS=0 RW=0
+ 198          ======================================================================*/
+ 199          void WriteCommandLCM(uchar WCLCM,BuysC) //BuysC为0时忽略忙检测
+ 200          {
+ 201   1       if (BuysC) ReadStatusLCM(); //根据需要检测忙
+ 202   1       LCM_Data = WCLCM;
+ 203   1       LCM_RS = 0;
+ 204   1       LCM_RW = 0;
+ 205   1       LCM_E = 0;
+ 206   1       LCM_E = 0;
+ 207   1       LCM_E = 1;
+ 208   1      }
+ 209          /*====================================================================
+ 210            正常读写操作之前必须检测LCD控制器状态:E=1 RS=0 RW=1;
+ 211            DB7: 0 LCD控制器空闲，1 LCD控制器忙。
+ 212            读状态
+ 213          ======================================================================*/
+ 214          uchar ReadStatusLCM(void)
+ 215          {
+ 216   1       LCM_Data = 0xFF;
+ 217   1       LCM_RS = 0;
+ 218   1       LCM_RW = 1;
+ 219   1       LCM_E = 0;
+ 220   1       LCM_E = 0;
+ 221   1       LCM_E = 1;
+ 222   1       while (LCM_Data & Busy); //检测忙信号  
+ 223   1       return(LCM_Data);
+ 224   1      }
+ 225          /*======================================================================
+ 226          功 能:     在1602 指定位置显示一个字符:第一行位置0~15,第二行16~31
+ 227          说 明:     第 X 行,第 y 列  注意:字符串不能长于16个字符
+ 228          ======================================================================*/
+ 229          void DisplayOneChar( uchar X, uchar Y, uchar ASCII)
+ 230          {
+ 231   1        X &= 0x1;
+ 232   1        Y &= 0xF; //限制Y不能大于15，X不能大于1
+ 233   1        if (X) Y |= 0x40; //当要显示第二行时地址码+0x40;
+ 234   1        Y |= 0x80; // 算出指令码
+ 235   1        WriteCommandLCM(Y, 0); //这里不检测忙信号，发送地址码
+ 236   1        WriteDataLCM(ASCII);
+ 237   1      }
+ 238          /*====================================================================
+ 239            设定延时时间:x*1ms
+ 240          ====================================================================*/
+ 241          void delayms(uint Ms)
+C51 COMPILER V7.06   CHENGXU_C                                                             06/22/2013 14:09:35 PAGE 5   
+
+ 242          {
+ 243   1        uint i,TempCyc;
+ 244   1        for(i=0;i<Ms;i++)
+ 245   1        {
+ 246   2          TempCyc =70;
+ 247   2          while(TempCyc--);
+ 248   2        }
+ 249   1      }
+ 250          /**********
+ 251          延时函数
+ 252          ************/ 
+ 253          void delay(uchar i) 
+ 254          { 
+ 255   1      uchar j; 
+ 256   1      while(i--) 
+ 257   1      {  
+ 258   2      for(j=125;j>0;j--) 
+ 259   2      ; 
+ 260   2      } 
+ 261   1      }  
+ 262          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    573    ----
+   CONSTANT SIZE    =     27    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      4       9
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

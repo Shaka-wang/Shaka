@@ -1,0 +1,34 @@
+=========================================================================================================
+Auto created by Tang Dynasty v5.6.56362
+Copyright (c) 2012-2022 Anlogic
+Sun Mar  5 15:06:50 2023
+=========================================================================================================
+
+
+Top Model:                adc0809_control                                                 
+Device:                   eagle_s20                                                       
+Timing Constraint File:                                                                   
+STA Level:                Detail                                                          
+Speed Grade:              NA                                                              
+
+=========================================================================================================
+Timing summary:                                                                           
+---------------------------------------------------------------------------------------------------------
+Constraint path number: 0 (STA coverage = 0.00%)
+Timing violations: 0 setup errors, and 0 hold errors.
+Minimal setup slack: infinity, minimal hold slack: infinity
+
+Timing group statistics: 
+	Clock constraints: 
+	  No constraint path
+	Minimum input arrival time before clock: no constraint path
+	Maximum output required time after clock: no constraint path
+	Maximum combinational path delay: no constraint path
+
+
+Warning: No clock constraint on 3 clock net(s): 
+	clk_adc_syn_6
+	config_inst_syn_10
+	sys_clk_dup_1
+
+---------------------------------------------------------------------------------------------------------

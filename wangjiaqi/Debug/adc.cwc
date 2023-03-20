@@ -1,0 +1,21 @@
+<chipwatcher project_name="adc" bit_file="adc_Runs/phy_1/adc.bit" bid_file="adc_Runs/phy_1/adc_inst.bid" chip_name="EG4S20NG88">
+	<instance name="auto_chipwatcher_0" id="0" enabled="yes">
+		<clock clk_name="fifo_list/fifo_list/ram_inst/clkb" polarity="posedge"/>
+		<config bram_name="auto_chipwatcher_0_logicbram" sample_depth="2048"/>
+		<signal_vec>
+			<data_nets>
+				<net name="adc/clk_adc"/>
+			</data_nets>
+			<watcher_nodes>
+				<net name="adc/clk_adc" op="equal" trigger="enable"/>
+			</watcher_nodes>
+		</signal_vec>
+		<trigger name="auto_chipwatcher_0_trigger" position="pre">
+			<condition level="1" enabled="yes" type="basic_and">
+				adc/clk_adc == any
+			</condition>
+			<log>
+			</log>
+		</trigger>
+	</instance>
+</chipwatcher>
