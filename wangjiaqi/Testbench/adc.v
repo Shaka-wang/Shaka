@@ -115,7 +115,7 @@ end
      OE: begin
          oe <= 1'b1;
          state <= SEND_DATA;
-     end
+     endkagidbcvaahvfbcha
      
      SEND_DATA: begin
          data_temp <= data;
